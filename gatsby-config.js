@@ -6,16 +6,16 @@ module.exports = {
   pathPrefix: '/',
   plugins: [
     {
-      resolve: 'gatsby-source-plone',
+      resolve: `gatsby-source-filesystem`,
       options: {
-        baseUrl: 'https://plonedemo.kitconcept.com/en',
-        logLevel: 'DEBUG',
+        name: `src`,
+        path: `${__dirname}/src/`,
       },
     },
     {
       resolve: `gatsby-source-filesystem`,
       options: {
-        path: `${__dirname}/content/pages/`,
+        path: `${__dirname}/src/pages/`,
         name: "pages"
       }
     },
