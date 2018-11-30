@@ -1,62 +1,70 @@
-/**
- * Implement Gatsby's SSR (Server Side Rendering) APIs in this file.
- *
- * See: https://www.gatsbyjs.org/docs/ssr-apis/
- */
-import React from 'react';
-import { withPrefix } from 'gatsby';
+import React from "react";
+import { JssProvider, SheetsRegistry } from "react-jss";
+import { MuiThemeProvider, createGenerateClassName } from "material-ui/styles";
+import { renderToString } from "react-dom/server";
+import { Provider } from "react-redux";
+require("dotenv").config();
 
-export const onRenderBody = ({ setHeadComponents, setHtmlAttributes }) => {
-  setHtmlAttributes({ lang: 'en' });
-  // Support for apple-touch-icons may be soon part of gatsby-plugin-manifest
-  // https://github.com/gatsbyjs/gatsby/pull/7256
+import createStore from "./src/state/store";
+import theme from "./src/styles/theme";
+
+function minifyCssString(css) {
+  return css.replace(/\n/g, "").replace(/\s\s+/g, " ");
+}
+
+exports.replaceRenderer = ({ bodyComponent, replaceBodyHTMLString, setHeadComponents }) => {
+  const sheetsRegistry = new SheetsRegistry();
+
+  const generateClassName = createGenerateClassName();
+
+  const store = createStore();
+
+  replaceBodyHTMLString(
+    renderToString(
+      <Provider store={store}>
+        <JssProvider registry={sheetsRegistry} generateClassName={generateClassName}>
+          <MuiThemeProvider theme={theme} sheetsManager={new Map()}>
+            {bodyComponent}
+          </MuiThemeProvider>
+        </JssProvider>
+      </Provider>
+    )
+  );
+
   setHeadComponents([
-    <link
-      key={'apple-touch-icon'}
-      rel="apple-touch-icon"
-      href={withPrefix('/icons/icon-48x48.png')}
-    />,
-    <link
-      key={'apple-touch-icon-72'}
-      rel="apple-touch-icon"
-      href={withPrefix('/icons/icon-72x72.png')}
-      sizes="72x72"
-    />,
-    <link
-      key={'apple-touch-icon-96'}
-      rel="apple-touch-icon"
-      href={withPrefix('/icons/icon-96x96.png')}
-      sizes="96x96"
-    />,
-    <link
-      key={'apple-touch-icon-144'}
-      rel="apple-touch-icon"
-      href={withPrefix('/icons/icon-144x144.png')}
-      sizes="144x144"
-    />,
-    <link
-      key={'apple-touch-icon-192'}
-      rel="apple-touch-icon"
-      href={withPrefix('/icons/icon-192x192.png')}
-      sizes="192x192"
-    />,
-    <link
-      key={'apple-touch-icon-256'}
-      rel="apple-touch-icon"
-      href={withPrefix('/icons/icon-256x256.png')}
-      sizes="256x256"
-    />,
-    <link
-      key={'apple-touch-icon-384'}
-      rel="apple-touch-icon"
-      href={withPrefix('/icons/icon-384x384.png')}
-      sizes="384x384"
-    />,
-    <link
-      key={'apple-touch-icon-512'}
-      rel="apple-touch-icon"
-      href={withPrefix('/icons/icon-512x512.png')}
-      sizes="512x512"
-    />,
+    <style
+      type="text/css"
+      id="server-side-jss"
+      key="server-side-jss"
+      dangerouslySetInnerHTML={{ __html: minifyCssString(sheetsRegistry.toString()) }}
+    />
+  ]);
+};
+
+exports.onRenderBody = ({ setHeadComponents }) => {
+  return setHeadComponents([]);
+};
+
+// https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js
+exports.onRenderBody = ({ setPostBodyComponents }) => {
+  return setPostBodyComponents([
+    <script
+      key={`webfontsloader-setup`}
+      dangerouslySetInnerHTML={{
+        __html: `
+        WebFontConfig = {
+          google: {
+            families: ["${theme.base.fonts.styledFamily}:${theme.base.fonts.styledFonts}"]
+          }
+        };
+
+        (function(d) {
+            var wf = d.createElement('script'), s = d.scripts[0];
+            wf.src = '';
+            wf.async = true;
+            s.parentNode.insertBefore(wf, s);
+        })(document);`
+      }}
+    />
   ]);
 };

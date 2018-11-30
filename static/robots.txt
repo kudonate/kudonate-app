@@ -1,0 +1,3 @@
+User-agent: *
+
+sitemap: https://zuolan.me/sitemap.xml
