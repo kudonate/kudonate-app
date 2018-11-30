@@ -1,10 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import injectSheet from "react-jss";
-import { InstantSearch, SearchBox, Hits, Stats, Pagination } from "react-instantsearch/dom";
 
-import Hit from "./Hit";
-import lang from "../../../content/meta/lang";
 
 const styles = theme => ({
   search: {
@@ -88,18 +85,7 @@ const Search = props => {
 
   return (
     <div className={classes.search}>
-      {algolia && algolia.appId && (
-          <InstantSearch
-            appId={algolia.appId}
-            apiKey={algolia.searchOnlyApiKey}
-            indexName={algolia.indexName}
-          >
-            <SearchBox translations={{ placeholder: lang.search }} />
-            <Stats />
-            <Hits hitComponent={Hit} />
-            <Pagination />
-          </InstantSearch>
-        )}
+  
     </div>
   );
 };
